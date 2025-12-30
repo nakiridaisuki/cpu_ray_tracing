@@ -21,9 +21,10 @@ public:
     void addTask(Task *task);
     Task *getTask();
 
-    void paralleFor(size_t width, size_t height, const std::function<void(size_t, size_t)> &lambda);
+    void ParallelFor(size_t width, size_t height, const std::function<void(size_t, size_t)> &lambda);
 private:
     std::atomic<bool> avail; // for subproccess to stop getting task
+    std::atomic<int> uncomplete_tasks; // number of uncomplete tasks
     std::vector<std::thread> threads;
     std::list<Task*> tasks;
     mutable SpinLock spin_lock;

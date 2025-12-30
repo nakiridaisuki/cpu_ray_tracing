@@ -10,6 +10,7 @@ ThreadPool::ThreadPool(size_t thread_count) {
     }
     for(size_t i=0; i<thread_count; i++)
     threads.push_back(std::thread(ThreadPool::WorkerThread, this));
+    uncomplete_tasks = 0;
 }
 
 ThreadPool::~ThreadPool() {
@@ -39,6 +40,12 @@ void ThreadPool::WorkerThread(ThreadPool *master) {
             continue;
         }
         task->run();
+        delete task;
+
+        {
+            Guard guard(master->spin_lock);
+            master->uncomplete_tasks--;
+        }
     }
 }
 
@@ -48,7 +55,7 @@ void ThreadPool::wait() const {
         // A scope for lock
         {
             Guard guard(spin_lock);
-            if(tasks.empty()) return;
+            if(uncomplete_tasks == 0) return;
         }
         // return the resource to OS
         std::this_thread::yield();
@@ -60,6 +67,7 @@ void ThreadPool::addTask(Task *task){
     // Using lock to prevent race condition
 
     Guard guard(spin_lock);
+    uncomplete_tasks++;
     tasks.push_back(task);
 }
 
@@ -77,9 +85,11 @@ Task *ThreadPool::getTask(){
     return task;
 }
 
-class ParalleForTask : public Task {
+class ParallelForTask : public Task {
+    // Parallel for task class
+    // Accept two argument and a function
 public:
-    ParalleForTask(size_t x, size_t y, const std::function<void(size_t, size_t)> lambda)
+    ParallelForTask(size_t x, size_t y, const std::function<void(size_t, size_t)> lambda)
         : x(x), y(y), lambda(lambda) {}
 
     void run() override {
@@ -91,12 +101,13 @@ private:
 };
 
 
-void ThreadPool::paralleFor(size_t width, size_t height, const std::function<void(size_t, size_t)> &lambda){
+void ThreadPool::ParallelFor(size_t width, size_t height, const std::function<void(size_t, size_t)> &lambda){
     Guard guard(spin_lock);
 
     for(int x=0; x<width; x++){
         for(int y=0; y<height; y++){
-            tasks.push_back(new ParalleForTask(x, y, lambda));
+            tasks.push_back(new ParallelForTask(x, y, lambda));
         }
     }
+    uncomplete_tasks += width * height;
 }
