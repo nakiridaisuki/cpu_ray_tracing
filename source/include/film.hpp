@@ -9,8 +9,8 @@ public:
 
     size_t getWidth() { return width; }
     size_t getHeight() { return height; }
-    glm::vec3 getPixel(size_t row, size_t col) { return pixels[ row*width + col ]; }
-    void setPixel(size_t row, size_t col, const glm::vec3 &color) { pixels[ row*width + col ] = color; }
+    glm::vec3 getPixel(size_t x, size_t y) { return pixels[ y*width + x ]; }
+    void setPixel(size_t x, size_t y, const glm::vec3 &color) { pixels[ y*width + x ] = color; }
 private:
     size_t width, height;
     std::vector<glm::vec3> pixels;

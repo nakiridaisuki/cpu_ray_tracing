@@ -3,7 +3,8 @@
 #include <vector>
 #include <thread>
 #include <list>
-#include <mutex>
+#include <functional>
+#include "spin_lock.hpp"
 
 class Task {
 public:
@@ -16,11 +17,14 @@ public:
     ThreadPool(size_t thread_count = 0);
     ~ThreadPool();
 
+    void wait() const;
     void addTask(Task *task);
     Task *getTask();
+
+    void paralleFor(size_t width, size_t height, const std::function<void(size_t, size_t)> &lambda);
 private:
-    bool avail; // for subproccess to stop getting task
+    std::atomic<bool> avail; // for subproccess to stop getting task
     std::vector<std::thread> threads;
     std::list<Task*> tasks;
-    std::mutex lock;
+    mutable SpinLock spin_lock;
 };
