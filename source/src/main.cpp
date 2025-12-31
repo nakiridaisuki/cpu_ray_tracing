@@ -2,47 +2,49 @@
 #include <glm/glm.hpp>
 #include "thread_pool.hpp"
 #include "film.hpp"
+#include "timer.hpp"
+#include "camera.hpp"
+#include "sphere.hpp"
+
+#include <stdio.h>
 
 int main(){
+    ThreadPool thread_pool;
+    Timer timer;
 
-    ThreadPool thread_pool {};
+    int width = 1920, height = 1080;
+    int factor = 1;
+    Film film(width/factor, height/factor);
 
-    Film file { 1920, 1080 };
-    // auto now = std::chrono::high_resolution_clock::now();
-    // for(int x=0; x<1920; x++){
-    //     for(int y=0; y<1080; y++){
-    //         // glm::vec3 color = {0.2, 0.4, 0.8};
-    //         // glm::vec3 color = {x/1920., 0, 0};
-    //         glm::vec3 color = {x/1920., y/1080., 0};
-    //         // color *= ((y/50 + x/50) % 2 ? 0. : 1.);
-    //         file.setPixel(x, y, color);
-    //     }
-    // }
-    // auto time = std::chrono::high_resolution_clock::now() - now;
-    // auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(time);
-    // std::cout << "Output Time: " << ms.count() << " ms" << std::endl;
-            
-    auto now = std::chrono::high_resolution_clock::now();
-    size_t width = 1920, height = 1080;
-    size_t factor = 120;
-    thread_pool.ParallelFor(width/factor, height/factor, [&](size_t x, size_t y){
-        for(int i=x*factor; i<(x+1)*factor; i++){
-            for(int j=y*factor; j<(y+1)*factor; j++){
-                glm::vec3 color = {i/float(width), j/float(height), 0};
-                file.setPixel(i, j, color);
-            }
+    Camera camera {film, {0, 0, 5}, {0, 0, 0}, 40};
+    Sphere sphere1 { {0, 0, 0}, 1.f };
+
+    glm::vec3 light = {5, 5, 10};
+
+    timer.start();        
+    thread_pool.ParallelFor(film.getWidth(), film.getHeight(), [&](size_t x, size_t y){
+        auto ray = camera.generateRay({x, y});
+        auto result = sphere1.intersect(ray);
+        if(result.has_value()){
+            glm::vec3 hit_point = ray.hit(result.value());
+            glm::vec3 normal = glm::normalize(hit_point - sphere1.center);
+            glm::vec3 light_dir = glm::normalize(light - hit_point);
+            float cosine = glm::max(0.f, glm::dot(normal, light_dir));
+
+            film.setPixel(x, y, { cosine, cosine, cosine });
+            // film.setPixel(x, y, { 0.2, 0.4, 0.6 });
+        }
+        else{
+            film.setPixel(x, y, { 0, 0, 0 });
         }
     });
-    auto time = std::chrono::high_resolution_clock::now() - now;
-    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(time);
-    std::cout << "Output Time: " << ms.count() << " ms" << std::endl;
     thread_pool.wait();
 
-    now = std::chrono::high_resolution_clock::now();
-    file.save("test_p6.ppm");
-    time = std::chrono::high_resolution_clock::now() - now;
-    ms = std::chrono::duration_cast<std::chrono::milliseconds>(time);
-    std::cout << "Save Time: " << ms.count() << " ms" << std::endl;
+    film.save("result.ppm");
+    timer.end();
+
+
+    std::cout << "Generate time: " << timer.ms() << " ms" << std::endl;
 
     return 0;
 }

@@ -68,7 +68,7 @@ void ThreadPool::addTask(Task *task){
 
     Guard guard(spin_lock);
     uncomplete_tasks++;
-    tasks.push_back(task);
+    tasks.push(task);
 }
 
 Task *ThreadPool::getTask(){
@@ -81,7 +81,7 @@ Task *ThreadPool::getTask(){
         return nullptr;
     }
     Task *task = tasks.front();
-    tasks.pop_front();
+    tasks.pop();
     return task;
 }
 
@@ -106,7 +106,7 @@ void ThreadPool::ParallelFor(size_t width, size_t height, const std::function<vo
 
     for(int x=0; x<width; x++){
         for(int y=0; y<height; y++){
-            tasks.push_back(new ParallelForTask(x, y, lambda));
+            tasks.push(new ParallelForTask(x, y, lambda));
         }
     }
     uncomplete_tasks += width * height;

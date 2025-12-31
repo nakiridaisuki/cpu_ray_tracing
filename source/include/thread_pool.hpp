@@ -2,7 +2,7 @@
 
 #include <vector>
 #include <thread>
-#include <list>
+#include <queue>
 #include <functional>
 #include "spin_lock.hpp"
 
@@ -26,6 +26,6 @@ private:
     std::atomic<bool> avail; // for subproccess to stop getting task
     std::atomic<int> uncomplete_tasks; // number of uncomplete tasks
     std::vector<std::thread> threads;
-    std::list<Task*> tasks;
+    std::queue<Task*> tasks;
     mutable SpinLock spin_lock;
 };

@@ -1,3 +1,6 @@
 build/
 .vscode/
+result/
 *.ppm
+*.gif
+*.mp4
