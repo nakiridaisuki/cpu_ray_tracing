@@ -5,37 +5,53 @@
 #include "timer.hpp"
 #include "camera.hpp"
 #include "sphere.hpp"
-
-#include <stdio.h>
+#include "shape.hpp"
+#include "model.hpp"
 
 int main(){
     ThreadPool thread_pool;
     Timer timer;
 
     int width = 1920, height = 1080;
+    // int width = 1, height = 1;
     int factor = 1;
     Film film(width/factor, height/factor);
 
-    Camera camera {film, {0, 0, 5}, {0, 0, 0}, 40};
-    Sphere sphere1 { {0, 0, 0}, 1.f };
+    Camera camera {film, {-0.6, 0, 0}, {0, 0, 0}, 90};
 
-    glm::vec3 light = {5, 5, 10};
+    Sphere sphere { {0, 0, 0}, .5f };
+    Triangle triangle { 
+        {0, 0, -1}, 
+        {0, 1, 1}, 
+        {0, -1, 1}, 
+    };
+    Model model("model_and_uv/simple_dragon.obj");
+    Shape &shape = model;
+
+    glm::vec3 light = {-1, 2, 1};
+
+    std::atomic<int> count = 0;
 
     timer.start();        
     thread_pool.ParallelFor(film.getWidth(), film.getHeight(), [&](size_t x, size_t y){
         auto ray = camera.generateRay({x, y});
-        auto result = sphere1.intersect(ray);
-        if(result.has_value()){
-            glm::vec3 hit_point = ray.hit(result.value());
-            glm::vec3 normal = glm::normalize(hit_point - sphere1.center);
-            glm::vec3 light_dir = glm::normalize(light - hit_point);
-            float cosine = glm::max(0.f, glm::dot(normal, light_dir));
+        auto hit_info = shape.intersect(ray);
+        if(hit_info.has_value()){
+            glm::vec3 light_dir = glm::normalize(light - hit_info->hit_point);
+            float cosine = glm::max(0.f, glm::dot(hit_info->normal, light_dir));
 
             film.setPixel(x, y, { cosine, cosine, cosine });
+            // film.setPixel(x, y, { 1, 1, 1 });
             // film.setPixel(x, y, { 0.2, 0.4, 0.6 });
         }
         else{
             film.setPixel(x, y, { 0, 0, 0 });
+        }
+
+        count++;
+
+        if(count % film.getWidth() == 0){
+            std::cout << static_cast<float>(count) / (film.getWidth() * film.getHeight()) << std::endl;
         }
     });
     thread_pool.wait();
