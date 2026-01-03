@@ -1,4 +1,4 @@
-#include "plane.hpp"
+#include "shape/plane.hpp"
 
 std::optional<HitInfo> Plane::intersect(const Ray &ray, float t_min, float t_max) const {
     // Hit equation:

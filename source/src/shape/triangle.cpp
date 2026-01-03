@@ -1,6 +1,4 @@
-#include "triangle.hpp"
-
-#include <iostream>
+#include "shape/triangle.hpp"
 
 std::optional<HitInfo> Triangle::intersect(const Ray &ray, float t_min, float t_max) const {
     // Hit equation:

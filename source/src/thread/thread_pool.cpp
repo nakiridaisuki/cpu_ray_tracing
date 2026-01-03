@@ -1,4 +1,6 @@
-#include "thread_pool.hpp"
+#include "thread/thread_pool.hpp"
+
+ThreadPool thread_pool;
 
 ThreadPool::ThreadPool(size_t thread_count) {
     // Construct the thread pool and create `thread_count` threads

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "shape.hpp"
+#include "shape/shape.hpp"
 
 struct Plane : public Shape{
     Plane(glm::vec3 point, glm::vec3 normal): point(point), normal(normal) {}

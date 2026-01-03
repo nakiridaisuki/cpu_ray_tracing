@@ -1,6 +1,6 @@
 #pragma once
 
-#include "triangle.hpp"
+#include "shape/triangle.hpp"
 #include "filesystem"
 
 class Model : public Shape{

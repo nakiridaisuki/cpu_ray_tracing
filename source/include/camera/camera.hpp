@@ -1,7 +1,7 @@
 #pragma once
 
-#include "film.hpp"
-#include "ray.hpp"
+#include "camera/film.hpp"
+#include "camera/ray.hpp"
 
 class Camera{
 public:
@@ -10,6 +10,7 @@ public:
     Ray generateRay(const glm::ivec2 &pixel_corod, const glm::vec2 &offset = {0.5, 0.5}) const;
 
     Film &getFilm() { return film; }
+    void clearFilm() { film.clear(); }
     const Film &getFilm() const { return film; }
 private:
     Film film;

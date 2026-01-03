@@ -4,7 +4,7 @@
 #include <thread>
 #include <queue>
 #include <functional>
-#include "spin_lock.hpp"
+#include "thread/spin_lock.hpp"
 
 class Task {
 public:
@@ -29,3 +29,5 @@ private:
     std::queue<Task*> tasks;
     mutable SpinLock spin_lock;
 };
+
+extern ThreadPool thread_pool;

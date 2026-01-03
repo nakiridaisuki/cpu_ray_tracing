@@ -12,8 +12,9 @@ struct Pixel{
 
 class Film {
 public:
-    Film(int width, int height);
+    Film(int width, int height): width(width), height(height) { pixels.resize(width * height); }
     void save(const std::filesystem::path &filename);
+    void clear() { pixels.clear(), pixels.resize(width * height); }
 
     size_t getWidth() const { return width; }
     size_t getHeight() const { return height; }
@@ -26,6 +27,7 @@ public:
         pixels[ y*width + x ].color += color; 
         pixels[ y*width + x ].sample_count++;
     }
+
 private:
     size_t width, height;
     std::vector<Pixel> pixels;

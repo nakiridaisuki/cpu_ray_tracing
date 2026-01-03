@@ -1,4 +1,4 @@
-#include "frame.hpp"
+#include "utils/frame.hpp"
 
 Frame::Frame(glm::vec3 &normal) {
     y_axis = normal;
@@ -7,7 +7,7 @@ Frame::Frame(glm::vec3 &normal) {
 }
 
 glm::vec3 Frame::worldFromLocal(const glm::vec3 &direction_local) const {
-    return (
+    return glm::normalize(
         direction_local.x * x_axis + 
         direction_local.y * y_axis + 
         direction_local.z * z_axis

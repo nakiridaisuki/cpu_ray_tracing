@@ -1,4 +1,4 @@
-#include "sphere.hpp"
+#include "shape/sphere.hpp"
 
 std::optional<HitInfo> Sphere::intersect(const Ray &ray, float t_min, float t_max) const {
     // Hit equation:
@@ -41,7 +41,7 @@ std::optional<HitInfo> Sphere::intersect(const Ray &ray, float t_min, float t_ma
 
     if(t_min < root && root < t_max){
         glm::vec3 hit_point = ray.hit(root);
-        glm::vec3 normal = glm::normalize(hit_point - normal);
+        glm::vec3 normal = glm::normalize(hit_point - center);
         return HitInfo {root, hit_point, normal};
     }
     return {};

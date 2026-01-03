@@ -1,6 +1,6 @@
 #pragma once
 
-#include "shape.hpp"
+#include "shape/shape.hpp"
 
 struct Triangle : public Shape{
     glm::vec3 p1, p2, p3;

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "shape.hpp"
+#include "shape/shape.hpp"
 
 struct Sphere : public Shape {
     Sphere (const glm::vec3 center, float radius): center(center), radius(radius) {}

@@ -1,12 +1,9 @@
-#include "film.hpp"
-#include "thread_pool.hpp"
-#include "rgb.hpp"
+#include "camera/film.hpp"
+#include "thread/thread_pool.hpp"
+#include "utils/rgb.hpp"
 #include <fstream>
+#include <iostream>
 #include <numeric>
-
-Film::Film(int width, int height): width(width), height(height) {
-    pixels.resize(width * height);
-}
 
 void Film::save(const std::filesystem::path &filename) {
     // Using PPM format
@@ -27,7 +24,7 @@ void Film::save(const std::filesystem::path &filename) {
 
     buffer.resize(width * height * 3);
     const size_t factor = std::gcd(width, height);
-    ThreadPool thread_pool;
+
     thread_pool.ParallelFor(width/factor, height/factor, [&](size_t x, size_t y){
         for(int i=x*factor; i<(x+1)*factor; i++){
             for(int j=y*factor; j<(y+1)*factor; j++){
@@ -42,16 +39,5 @@ void Film::save(const std::filesystem::path &filename) {
     });
     thread_pool.wait();
 
-    // Serial for loop save
-    // buffer.reserve(width * height * 3);
-    // for(size_t y=0; y<height; y++){
-    //     for(size_t x=0; x<width; x++){
-    //         const glm::vec3 &color = getPixel(x, y);
-    //         glm::u8vec3 color_i = glm::clamp(color * 255.f, 0.f, 255.f);
-    //         buffer.push_back(color_i.x);
-    //         buffer.push_back(color_i.y);
-    //         buffer.push_back(color_i.z);
-    //     }
-    // }
     file.write(reinterpret_cast<const char*>(buffer.data()), buffer.size());
 }
