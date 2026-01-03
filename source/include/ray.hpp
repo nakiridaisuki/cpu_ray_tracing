@@ -7,6 +7,8 @@ struct Ray {
     glm::vec3 direction;
 
     glm::vec3 hit(float t) const { return origin + direction * t; };
+
+    Ray objectFromWorld(const glm::mat4 &object_from_world) const;
 };
 
 struct HitInfo {
