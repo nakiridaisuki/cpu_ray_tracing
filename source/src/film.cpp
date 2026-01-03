@@ -1,5 +1,6 @@
 #include "film.hpp"
 #include "thread_pool.hpp"
+#include "rgb.hpp"
 #include <fstream>
 #include <numeric>
 
@@ -30,13 +31,12 @@ void Film::save(const std::filesystem::path &filename) {
     thread_pool.ParallelFor(width/factor, height/factor, [&](size_t x, size_t y){
         for(int i=x*factor; i<(x+1)*factor; i++){
             for(int j=y*factor; j<(y+1)*factor; j++){
-                const glm::vec3 &color = getPixel(i, j);
-                glm::u8vec3 color_i = glm::clamp(color * 255.f, 0.f, 255.f);
+                RGB rgb(getPixelColor(i, j));
 
                 const size_t idx = i + j*width;
-                buffer[idx*3] = color_i.x;
-                buffer[idx*3 + 1] = color_i.y;
-                buffer[idx*3 + 2] = color_i.z;
+                buffer[idx*3] = rgb.r;
+                buffer[idx*3 + 1] = rgb.g;
+                buffer[idx*3 + 2] = rgb.b;
             }
         }
     });

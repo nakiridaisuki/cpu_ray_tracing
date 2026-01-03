@@ -1,14 +1,11 @@
 #pragma once
 
 #include "shape.hpp"
+#include "material.hpp"
 
-struct ShapeInstance{
-    ShapeInstance(Shape *shape, glm::mat4 world_from_object, glm::mat4 object_from_world):
-        shape(shape),
-        world_from_object(world_from_object),
-        object_from_world(object_from_world) {}
-
-    Shape *shape;
+struct ShapeInstance {
+    const Shape &shape;
+    const Material &material;
     glm::mat4 world_from_object;
     glm::mat4 object_from_world;
 };
@@ -23,7 +20,8 @@ public:
     ) const override;
 
     void addInstance(
-        Shape &shape, 
+        const Shape &shape, 
+        const Material &material,
         const glm::vec3 &location = {0, 0, 0}, 
         const glm::vec3 &scale = {1, 1, 1}, 
         const glm::vec3 &rotate = {0, 0, 0}
