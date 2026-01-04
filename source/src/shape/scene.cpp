@@ -1,6 +1,8 @@
 #include "shape/scene.hpp"
 #include <glm/ext/matrix_transform.hpp>
 
+#include <iostream>
+
 void Scene::addInstance(const Shape &shape, const Material &material, const glm::vec3 &location, const glm::vec3 &scale, const glm::vec3 &rotate) {
     glm::mat4 world_from_object = (
         glm::translate(glm::mat4(1.f), location) * 

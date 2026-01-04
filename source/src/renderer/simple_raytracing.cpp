@@ -1,11 +1,26 @@
 #include "renderer/simple_rt.hpp"
 #include "utils/frame.hpp"
+#include "utils/random.hpp"
 
 glm::vec3 SimpleRTRenderer::renderPixel(const glm::ivec2 &pixel_coord) {
+    static thread_local Random uniform(std::random_device{}());
+
     auto ray = camera.generateRay(pixel_coord, { uniform.gen(), uniform.gen() });
     glm::vec3 beta = {1, 1, 1};
     glm::vec3 color = {0, 0, 0};
 
+    // For a simple ray tracing, we calculate the reflaction of every ray.
+    // Depend on material, if it's specular, then using mirror reflaction
+    // otherwise, we sample a random point on a half sphese.
+
+    // To calculate the color of one pixel, every time when a ray hit a point
+    // we need to add up (current light intensity * object color).
+    // Albedo is basically the "color" of an object, means how many light will absorb by this object
+    // Emissive is the light color of an object emit.
+    // If an object is specular, it will behave like a mirror.
+
+    // Using for or while?
+    // I use for to prevent infinity loop
     for(int k=0; k<50; k++){
         auto hit_info = scene.intersect(ray);
         if(hit_info.has_value()){
@@ -23,7 +38,7 @@ glm::vec3 SimpleRTRenderer::renderPixel(const glm::ivec2 &pixel_coord) {
             else{
                 do {
                     light_direction = { uniform.gen(-1, 1), uniform.gen(-1, 1), uniform.gen(-1, 1) };
-                } while (glm::length(light_direction) < 1);
+                } while (glm::length(light_direction) > 1);
                 light_direction.y = glm::abs(light_direction.y);
                 light_direction = glm::normalize(light_direction);
                 light_direction = frame.worldFromLocal(light_direction);

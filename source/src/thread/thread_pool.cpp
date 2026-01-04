@@ -1,4 +1,7 @@
 #include "thread/thread_pool.hpp"
+#include "utils/profile.hpp"
+#include <iostream>
+#include <cmath>
 
 ThreadPool thread_pool;
 
@@ -91,25 +94,44 @@ class ParallelForTask : public Task {
     // Parallel for task class
     // Accept two argument and a function
 public:
-    ParallelForTask(size_t x, size_t y, const std::function<void(size_t, size_t)> lambda)
-        : x(x), y(y), lambda(lambda) {}
+    ParallelForTask(size_t x, size_t y, size_t chunk_x, size_t chunk_y, const std::function<void(size_t, size_t)> &lambda)
+        : x(x), y(y), chunk_x(chunk_x), chunk_y(chunk_y), lambda(lambda) {}
 
     void run() override {
-        lambda(x, y);
+        for(int i=x; i<x+chunk_x; i++){
+            for(int j=y; j<y+chunk_y; j++){
+                lambda(i, j);
+            }
+        }
     }
 private:
-    size_t x, y;
+    size_t x, y, chunk_x, chunk_y;
     std::function<void(size_t, size_t)> lambda;
 };
 
 
-void ThreadPool::ParallelFor(size_t width, size_t height, const std::function<void(size_t, size_t)> &lambda){
+void ThreadPool::ParallelFor(size_t width, size_t height, const std::function<void(size_t, size_t)> &lambda, bool is_complex){
+    PROFILE("Parallel for")
+
     Guard guard(spin_lock);
 
-    for(int x=0; x<width; x++){
-        for(int y=0; y<height; y++){
-            tasks.push(new ParallelForTask(x, y, lambda));
+    float max_task_num;
+    if(is_complex){
+        max_task_num = std::sqrt(threads.size() * 8);
+    }
+    else{
+        max_task_num = std::sqrt(threads.size() * 1);
+    }
+    size_t chunk_x = std::ceil(static_cast<float>(width) / max_task_num);
+    size_t chunk_y = std::ceil(static_cast<float>(height) / max_task_num);
+
+    for(int x = 0; x < width; x += chunk_x){
+        for(int y = 0; y < height; y += chunk_y){
+            int wx = chunk_x, wy = chunk_y;
+            if(x + wx > width) wx = width - x;
+            if(y + wy > height) wy = height - y;
+            tasks.push(new ParallelForTask(x, y, wx, wy, lambda));
+            uncomplete_tasks ++;
         }
     }
-    uncomplete_tasks += width * height;
 }

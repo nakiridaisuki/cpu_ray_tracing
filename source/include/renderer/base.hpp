@@ -14,6 +14,8 @@
     }; 
 
 class BaseRenderer {
+// BaseRenderer implement render for rendering picture
+// All subRenderer implement renderPixel for render function to render a pixel
 public:
     BaseRenderer(Camera &camera, const Scene &scene): camera(camera), scene(scene) {}
 
@@ -24,5 +26,4 @@ private:
 protected:
     Camera &camera;
     const Scene &scene;
-    Random uniform;
 };

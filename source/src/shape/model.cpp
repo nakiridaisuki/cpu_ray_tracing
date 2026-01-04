@@ -2,7 +2,11 @@
 #include <iostream>
 #include <string.h>
 
+#include "utils/profile.hpp"
+
 Model::Model(const std::filesystem::path &filename) {
+    PROFILE("Loading model " + filename.string())
+
     // vertices : v xx yy zz
     std::vector<glm::vec3> positions;
     // normals : vn xx yy zz

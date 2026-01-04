@@ -5,7 +5,11 @@
 #include <iostream>
 #include <numeric>
 
+#include "utils/profile.hpp"
+
 void Film::save(const std::filesystem::path &filename) {
+    PROFILE("Save image " + filename.string())
+
     // Using PPM format
     // P6
     // width height
@@ -23,20 +27,15 @@ void Film::save(const std::filesystem::path &filename) {
     std::vector<uint8_t> buffer;
 
     buffer.resize(width * height * 3);
-    const size_t factor = std::gcd(width, height);
 
-    thread_pool.ParallelFor(width/factor, height/factor, [&](size_t x, size_t y){
-        for(int i=x*factor; i<(x+1)*factor; i++){
-            for(int j=y*factor; j<(y+1)*factor; j++){
-                RGB rgb(getPixelColor(i, j));
-
-                const size_t idx = i + j*width;
-                buffer[idx*3] = rgb.r;
-                buffer[idx*3 + 1] = rgb.g;
-                buffer[idx*3 + 2] = rgb.b;
-            }
-        }
-    });
+    thread_pool.ParallelFor(width, height, [&](size_t x, size_t y){
+        RGB rgb(getPixelColor(x, y));
+    
+        const size_t idx = x + y*width;
+        buffer[idx*3] = rgb.r;
+        buffer[idx*3 + 1] = rgb.g;
+        buffer[idx*3 + 2] = rgb.b;
+    }, false);
     thread_pool.wait();
 
     file.write(reinterpret_cast<const char*>(buffer.data()), buffer.size());

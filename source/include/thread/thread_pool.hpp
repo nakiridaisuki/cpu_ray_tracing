@@ -9,6 +9,7 @@
 class Task {
 public:
     virtual void run() = 0;
+    virtual ~Task() = default;
 };
 
 class ThreadPool {
@@ -21,7 +22,7 @@ public:
     void addTask(Task *task);
     Task *getTask();
 
-    void ParallelFor(size_t width, size_t height, const std::function<void(size_t, size_t)> &lambda);
+    void ParallelFor(size_t width, size_t height, const std::function<void(size_t, size_t)> &lambda, bool is_complex = true);
 private:
     std::atomic<bool> avail; // for subproccess to stop getting task
     std::atomic<int> uncomplete_tasks; // number of uncomplete tasks

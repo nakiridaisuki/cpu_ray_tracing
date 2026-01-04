@@ -8,36 +8,13 @@ class Progress {
 public:
     Progress(size_t total_work, int step = 1, int width = 50): 
         total_work(total_work), 
-        current_work(0), 
         step(step),
-        current_percentage(0),
-        width(width) {}
+        width(width),
+        current_work(0), 
+        current_percentage(0)
+    {}
 
-    void update(size_t works) { 
-        Guard guard(spin_lock);
-        current_work += works; 
-
-        float percentage = static_cast<float>(current_work) / total_work;
-        if(percentage*100 - current_percentage < step) return;
-        current_percentage = percentage * 100;
-
-        std::cout << current_percentage << "%" << std::endl;
-
-        // int current_width = percentage * static_cast<float>(width);
-        
-        // std::string buffer = "\e[?25l[";
-        // for(int i=0; i<current_width-1; i++) buffer.push_back('=');
-        // buffer.push_back('>');
-        // for(int i=current_width; i<width; i++) buffer.push_back(' ');
-        // buffer.push_back(']');
-
-        // std::cout << buffer << " " << static_cast<int>(percentage * 100) << "%\r";
-        // std::cout.flush();
-    }
-
-    void end() {
-        std::cout << std::endl;
-    }
+    void update(size_t works);
 
 private:
     size_t total_work, current_work;
