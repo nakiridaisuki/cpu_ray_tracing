@@ -15,13 +15,13 @@
 int main(){
 
     int width = 1920, height = 1080;
-    int factor = 5;
+    int factor = 2;
     Film film(width/factor, height/factor);
 
     Camera camera {film, {-5, .5, 0}, {0, .2, 0}, 40};
     
     Sphere sphere { {0, 0, 0}, 1 };
-    Model model("model_and_uv/simple_dragon.obj");
+    Model model("model_and_uv/dragon_87k.obj");
     Plane plane( {0, 0, 0}, {0, 1, 0} );
     
     Scene scene {};
@@ -121,3 +121,25 @@ int main(){
 // Using rapidobj
 // ------- 640x360,  128spp,  1724 triangles ----------
 // Loading model 2 ms
+
+// Add BVH
+// ------- 640x360,  128spp,  1724 triangles ----------
+// Loading model 16 ms
+// Render 1spp: 13 ms
+// Render 16spp: 1228 ms
+// ------- 640x360,  128spp,  87k triangles ----------
+// Loading model 939 ms
+// Render 1spp: 85 ms
+// Render 16spp: 9389 ms
+
+// Change loop BVH intersect check
+// ------- 640x360,  128spp,  87k triangles ----------
+// Loading model 955 ms
+// Render 1spp: 73 ms
+// Render 16spp: 7013 ms
+
+// Memory align
+// ------- 640x360,  128spp,  87k triangles ----------
+// Loading model 746 ms
+// Render 1spp: 79 ms
+// Render 16spp: 6816 ms

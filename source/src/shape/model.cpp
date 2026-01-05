@@ -7,6 +7,7 @@
 
 Model::Model(const std::filesystem::path &filename) {
     PROFILE("Loading model " + filename.string())
+    std::vector<Triangle> triangles;
 
     auto result = rapidobj::ParseFile(filename, rapidobj::MaterialLibrary::Ignore());
     auto &attri = result.attributes;
@@ -71,29 +72,9 @@ Model::Model(const std::filesystem::path &filename) {
         }
     }
 
-    build();
+    bvh.build(std::move(triangles));
 }
 
 std::optional<HitInfo> Model::intersect(const Ray &ray, float t_min, float t_max) const {
-    if(!bound.intersect(ray, t_min, t_max)){
-        return {};
-    }
-
-    std::optional<HitInfo> closest_hit_info {};
-    for(const auto triangle : triangles){
-        auto hit_info = triangle.intersect(ray, t_min, t_max);
-        if(hit_info.has_value()) {
-            t_max = hit_info->t;
-            closest_hit_info = hit_info;
-        }
-    }
-    return closest_hit_info;
-}
-
-void Model::build(){
-    for(auto &tri:triangles){
-        bound.extend(tri.p1);
-        bound.extend(tri.p2);
-        bound.extend(tri.p3);
-    }
+    return bvh.intersect(ray, t_min, t_max);
 }

@@ -8,8 +8,6 @@
 #include "utils/profile.hpp"
 
 void Film::save(const std::filesystem::path &filename) {
-    PROFILE("Save image " + filename.string())
-
     // Using PPM format
     // P6
     // width height

@@ -43,7 +43,8 @@ glm::vec3 SimpleRTRenderer::renderPixel(const glm::ivec2 &pixel_coord) {
             }
 
             ray.direction = light_direction;
-            ray.origin = hit_info->hit_point + light_direction * 1e-4f;
+            ray.origin = hit_info->hit_point;
+            // ray.origin = hit_info->hit_point + light_direction * 1e-4f;
         }
         else{
             break;

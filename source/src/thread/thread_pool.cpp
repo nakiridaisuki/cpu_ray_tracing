@@ -111,8 +111,6 @@ private:
 
 
 void ThreadPool::ParallelFor(size_t width, size_t height, const std::function<void(size_t, size_t)> &lambda, bool is_complex){
-    PROFILE("Parallel for")
-
     Guard guard(spin_lock);
 
     float max_task_num;
