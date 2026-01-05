@@ -26,4 +26,5 @@ private:
 protected:
     Camera &camera;
     const Scene &scene;
+    Random uniform;
 };

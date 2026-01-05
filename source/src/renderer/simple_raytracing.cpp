@@ -3,8 +3,6 @@
 #include "utils/random.hpp"
 
 glm::vec3 SimpleRTRenderer::renderPixel(const glm::ivec2 &pixel_coord) {
-    static thread_local Random uniform(std::random_device{}());
-
     auto ray = camera.generateRay(pixel_coord, { uniform.gen(), uniform.gen() });
     glm::vec3 beta = {1, 1, 1};
     glm::vec3 color = {0, 0, 0};

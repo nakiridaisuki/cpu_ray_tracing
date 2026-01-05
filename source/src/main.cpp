@@ -75,7 +75,7 @@ int main(){
     NormalRenderer normal_renderer(camera, scene);
     SimpleRTRenderer simple_raytracing(camera, scene);
     
-    normal_renderer.render(1, "normal.ppm");
+    // normal_renderer.render(1, "normal.ppm");
 
     simple_raytracing.render(128, "RT.ppm");
 
@@ -110,8 +110,14 @@ int main(){
 
 // Change ParallelFor
 // ------- 640x360,  128spp,  1724 triangles ----------
-// Loading model 52 ms
 // Parallel For: 0 ms
-// Save image: 2 ms
-// Render 1spp: 672 ms
-// Render 16spp: 53365 ms
+
+// Add AABB
+// ------- 640x360,  128spp,  1724 triangles ----------
+// Loading model 52 ms
+// Render 1spp: 134 ms
+// Render 16spp: 17531 ms
+
+// Using rapidobj
+// ------- 640x360,  128spp,  1724 triangles ----------
+// Loading model 2 ms
