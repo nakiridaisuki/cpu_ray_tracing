@@ -15,7 +15,7 @@ Model::Model(const std::filesystem::path &filename) {
     for(auto &shape : result.shapes){
         auto &mesh = shape.mesh;
         
-        int indices_offset = 0;
+        size_t indices_offset = 0;
         for(auto num_vertices : mesh.num_face_vertices){
             if(num_vertices == 3){
                 auto idx1 = mesh.indices[indices_offset];
@@ -71,7 +71,6 @@ Model::Model(const std::filesystem::path &filename) {
             indices_offset += num_vertices;
         }
     }
-
     bvh.build(std::move(triangles));
 }
 

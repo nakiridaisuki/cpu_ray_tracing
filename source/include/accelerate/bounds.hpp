@@ -10,7 +10,12 @@ struct Bound{
 
     void extend(const glm::vec3 &point);
     void extend(const Triangle &tri);
+    void extend(const Bound &bnd);
 
     bool intersect(const Ray &ray, float t_min, float t_max) const ;
     glm::vec3 diagonal() { return b_max - b_min; }
+    float area() {
+        glm::vec3 diag = diagonal();
+        return (diag.x * (diag.y + diag.z) + diag.y * diag.z) * 2.f;
+    }
 };

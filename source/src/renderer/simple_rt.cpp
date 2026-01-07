@@ -19,7 +19,7 @@ glm::vec3 SimpleRTRenderer::renderPixel(const glm::ivec2 &pixel_coord) {
 
     // Using for or while?
     // I use for to prevent infinity loop
-    for(int k=0; k<50; k++){
+    for(int i=0; i<50; i++){
         auto hit_info = scene.intersect(ray);
         if(hit_info.has_value()){
             color += beta * hit_info->material->emissive;
@@ -43,8 +43,8 @@ glm::vec3 SimpleRTRenderer::renderPixel(const glm::ivec2 &pixel_coord) {
             }
 
             ray.direction = light_direction;
-            ray.origin = hit_info->hit_point;
-            // ray.origin = hit_info->hit_point + light_direction * 1e-4f;
+            // ray.origin = hit_info->hit_point;
+            ray.origin = hit_info->hit_point + light_direction * 1e-4f;
         }
         else{
             break;

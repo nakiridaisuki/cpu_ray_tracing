@@ -2,6 +2,7 @@
 
 #include "glm/glm.hpp"
 #include "shape/material.hpp"
+#include "utils/debug_macro.hpp"
 
 struct Ray {
     glm::vec3 origin;
@@ -21,4 +22,8 @@ struct HitInfo {
     glm::vec3 hit_point;
     glm::vec3 normal;
     const Material *material = nullptr;
+
+    DEBUG_LINE(size_t bound_test_count)
+    DEBUG_LINE(size_t triangle_test_count)
+    DEBUG_LINE(size_t bound_depth)
 };

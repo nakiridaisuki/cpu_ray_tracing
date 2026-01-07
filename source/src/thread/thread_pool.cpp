@@ -1,9 +1,5 @@
 #include "thread/thread_pool.hpp"
-#include "utils/profile.hpp"
-#include <iostream>
 #include <cmath>
-
-ThreadPool thread_pool;
 
 ThreadPool::ThreadPool(size_t thread_count) {
     // Construct the thread pool and create `thread_count` threads
@@ -41,7 +37,8 @@ void ThreadPool::WorkerThread(ThreadPool *master) {
         Task *task = master->getTask();
         if(task == nullptr){
             // return the resource to OS
-            std::this_thread::yield();
+            std::this_thread::sleep_for(std::chrono::milliseconds(2));
+            // std::this_thread::yield();
             continue;
         }
         task->run();
@@ -133,3 +130,5 @@ void ThreadPool::ParallelFor(size_t width, size_t height, const std::function<vo
         }
     }
 }
+
+ThreadPool thread_pool;

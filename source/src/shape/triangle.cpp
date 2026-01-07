@@ -43,7 +43,7 @@ std::optional<HitInfo> Triangle::intersect(const Ray &ray, float t_min, float t_
     glm::vec3 s1 = glm::cross(ray.direction, e2);
     
     float det = glm::dot(s1, e1);
-    float eps = 1e-5;
+    float eps = std::numeric_limits<float>::epsilon();
     
     if(std::abs(det) < eps){ return {}; }
     float inv_det = 1.f / det;
