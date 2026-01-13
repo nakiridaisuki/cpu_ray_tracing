@@ -37,8 +37,8 @@ void ThreadPool::WorkerThread(ThreadPool *master) {
         Task *task = master->getTask();
         if(task == nullptr){
             // return the resource to OS
-            std::this_thread::sleep_for(std::chrono::milliseconds(2));
-            // std::this_thread::yield();
+            // std::this_thread::sleep_for(std::chrono::milliseconds(2));
+            std::this_thread::yield();
             continue;
         }
         task->run();

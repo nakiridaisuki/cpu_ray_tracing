@@ -10,7 +10,7 @@ void BVH::build(std::vector<Triangle> &&triangles) {
     BVHTreeNode *root = treenode_allocator.allocate();
 
     for(size_t i=0; i<triangles.size(); i++){
-        root->bound.extend(triangles[i]);
+        root->bound.extend(triangles[i].getBound());
     }
     root->depth = 1;
 
@@ -28,17 +28,24 @@ void BVH::build(std::vector<Triangle> &&triangles) {
     DEBUG_LINE(std::cout << "BVH state: Maximum leaf node triangle cnt " << state.max_leaf_node_triangle_cnt << std::endl)
 }
 
+// Recursively build the BVH tree
+// Using inplace partition of triangles list
+// Every node control triangles[start, end)
 void BVH::recursive_build(BVHTreeNode *node, size_t start, size_t end, BVHState &state, std::vector<Triangle> &triangles) {
+    // Calculate node data
     state.total_node_cnt++;
     node->start = start;
     node->triangle_cnt = end - start;
+
     // Split triangles into binary tree
     if(end - start == 1 || node->depth >= MAX_STACK_SIZE){
         state.addLeaf(node, end - start);
         return;
     }
 
-    #define BUCKET_NUM 16
+    // All variables used in finding minimum cost of split
+    // Avoid using dinamic vector to improve execution time
+    #define BUCKET_NUM 12
     auto diag = node->bound.diagonal();
     float min_cost = node->bound.area() * (end - start);
     glm::vec3 scale = static_cast<float>(BUCKET_NUM) / diag;
@@ -47,18 +54,26 @@ void BVH::recursive_build(BVHTreeNode *node, size_t start, size_t end, BVHState 
     Bound min_left_bnd, min_right_bnd;
     size_t min_left_tri_cnt, min_right_tri_cnt;
 
+    // Check BUCKET_NUM different saperation on 3 axis
+    // For every axis, calculate all bucket bound and triangle number in this bucket
+    // Then pre-calculate the prefix and postfix bound box, 
+    // and use it to calculate every cutting cost.
+    // After find out the minimum cutting bucket index and axis,
+    // fill the data into child nodes and inplace partition the triangle list.
     for(size_t axis=0; axis<3; axis++){
         std::array<Bound, BUCKET_NUM> bucket_bound, prefix_bound, postfix_bound;
         std::array<size_t, BUCKET_NUM> bucket_tri_cnt{}, prefix_tri_cnt{}, postfix_tri_cnt{};
 
+        // Calcualte bucket data
         for(size_t tri_idx = start; tri_idx < end; tri_idx++){
             auto &tri = triangles[tri_idx];
             float mid = tri.centroid[axis];
             size_t idx = glm::clamp<size_t>((mid - node->bound.b_min[axis]) * scale[axis], 0, BUCKET_NUM - 1);
             bucket_tri_cnt[idx]++;
-            bucket_bound[idx].extend(tri);
+            bucket_bound[idx].extend(tri.getBound());
         }
 
+        // Pre-calculate prefix and postfix
         for(size_t i=1; i<BUCKET_NUM; i++){
             prefix_bound[i] = prefix_bound[i-1];
             prefix_bound[i].extend(bucket_bound[i-1]);
@@ -73,6 +88,7 @@ void BVH::recursive_build(BVHTreeNode *node, size_t start, size_t end, BVHState 
             }
         }
         
+        // Finding the minimum cutting bucket index
         for(size_t i=1; i<BUCKET_NUM; i++){
             Bound &left_bound = prefix_bound[i];
             size_t left_tri_cnt = prefix_tri_cnt[i];
@@ -99,11 +115,13 @@ void BVH::recursive_build(BVHTreeNode *node, size_t start, size_t end, BVHState 
         }
     }
 
+    // Check if this node can be splited
     if(split_bucket_idx == 0){
         state.addLeaf(node, end - start);
         return;
     }
 
+    // Fill data and build recursively
     node->triangle_cnt = 0;
     
     node->left = treenode_allocator.allocate();
@@ -115,11 +133,17 @@ void BVH::recursive_build(BVHTreeNode *node, size_t start, size_t end, BVHState 
     node->left->bound = min_left_bnd;
     node->right->bound = min_right_bnd;
 
+    // Inplace partition, improve huge execution time
     size_t mid_idx =  std::partition(triangles.begin() + start, triangles.begin() + end, [&](auto &tri){
         float mid = tri.centroid[node->split_axis];
         size_t idx = glm::clamp<size_t>((mid - node->bound.b_min[node->split_axis]) * scale[node->split_axis], 0, BUCKET_NUM - 1);
         return idx < split_bucket_idx;
     }) - triangles.begin();
+
+    if(mid_idx == start || mid_idx == end){
+        state.addLeaf(node, end - start);
+        return;
+    }
 
     recursive_build(node->left, start, mid_idx, state, triangles);
     recursive_build(node->right, mid_idx, end, state, triangles);
@@ -136,12 +160,13 @@ std::optional<HitInfo> BVH::intersect(const Ray &ray, float t_min, float t_max) 
     DEBUG_LINE(size_t bound_test_cnt = 0)
     DEBUG_LINE(size_t triangle_test_cnt = 0)
 
+    glm::vec3 inv_direc = 1.f / ray.direction;
     while(true){
         DEBUG_LINE(bound_test_cnt++)
 
         auto &node = flatten_nodes[current_node_idx];
         // 1. Check if intersect with this node
-        if(!node.bound.intersect(ray, t_min, t_max)){
+        if(!node.bound.intersect(ray, inv_direc, t_min, t_max)){
             if(ptr == stack.begin()) break;
             current_node_idx = *(--ptr);
             continue;
@@ -172,8 +197,6 @@ std::optional<HitInfo> BVH::intersect(const Ray &ray, float t_min, float t_max) 
             if(hit_info.has_value()){
                 t_max = hit_info->t;
                 closest_hit_info = hit_info;
-
-                DEBUG_LINE(closest_hit_info->bound_depth = node.depth)
             }
         }        
         
@@ -182,10 +205,8 @@ std::optional<HitInfo> BVH::intersect(const Ray &ray, float t_min, float t_max) 
     }
 
     #ifdef WITH_DEBUG_INFO
-    if(closest_hit_info.has_value()){
-        closest_hit_info->triangle_test_count = triangle_test_cnt;
-        closest_hit_info->bound_test_count = bound_test_cnt;
-    }
+    ray.triangle_test_count += triangle_test_cnt;
+    ray.bound_test_count += bound_test_cnt;
     #endif
 
     return closest_hit_info;
@@ -210,6 +231,5 @@ void BVH::TreeNodeFlatten(BVHTreeNode *node) {
     
     flatten_nodes[my_idx].bound = std::move(node->bound);
     flatten_nodes[my_idx].triangle_cnt = static_cast<uint16_t>(node->triangle_cnt);
-    flatten_nodes[my_idx].depth = node->depth;
     flatten_nodes[my_idx].split_axis = node->split_axis;
 }

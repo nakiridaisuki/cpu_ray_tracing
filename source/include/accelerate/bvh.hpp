@@ -23,7 +23,6 @@ struct alignas(32) BVHNode {
         int right_idx;    // for tree node
     };
     uint16_t triangle_cnt;
-    uint8_t depth;
     uint8_t split_axis;
 };
 
@@ -31,10 +30,12 @@ struct BVHState {
     size_t total_node_cnt = {};
     size_t leaf_node_cnt = {};
     size_t max_leaf_node_triangle_cnt = {};
+    size_t max_leaf_node_depth {};
 
     void addLeaf(BVHTreeNode *node, size_t leaf_cnt){
         leaf_node_cnt++;
         max_leaf_node_triangle_cnt = glm::max(max_leaf_node_triangle_cnt, leaf_cnt);
+        max_leaf_node_depth = node->depth;
     }
 };
 
@@ -65,10 +66,10 @@ class BVH : Shape {
 public:
     void build(std::vector<Triangle> &&triangles);
     std::optional<HitInfo> intersect(const Ray &ray, float t_min, float t_max) const override;
+    Bound getBound() const { return flatten_nodes[0].bound; }
 private:
     void recursive_build(BVHTreeNode *node, size_t start, size_t end, BVHState &state, std::vector<Triangle> &triangles);
     void TreeNodeFlatten(BVHTreeNode *node);
-
     BVHTreeNodeAllocator treenode_allocator;
     std::vector<BVHNode> flatten_nodes;
     std::vector<Triangle> ordered_triangles;

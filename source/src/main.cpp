@@ -12,6 +12,7 @@
 #include "renderer/normal.hpp"
 #include "renderer/simple_rt.hpp"
 #include "renderer/debug.hpp"
+#include "renderer/pathtracing.hpp"
 
 #include "thread/thread_pool.hpp"
 
@@ -24,7 +25,8 @@ int main(){
     int factor = 2;
     Film film(width/factor, height/factor);
 
-    Camera camera {film, {5, .5, 0}, {0, 0, 0}, 40};
+    Camera camera { film, { -12, 5, -12 }, { 0, 0, 0 }, 45 };
+    // Camera camera { film, { -3.6, 0, 0 }, { 0, 0, 0 }, 45 };
     
     Sphere sphere { {0, 0, 0}, 1 };
     Model model("model_and_uv/dragon_871k.obj");
@@ -32,78 +34,92 @@ int main(){
     Plane plane( {0, 0, 0}, {0, 1, 0} );
     
     Scene scene {};
-    // scene.addInstance(
-    //     sphere,
-    //     Material( {1, 1, 1}, false, RGB(0xf0, 0x89, 0xb3) ), 
-    //     {-1, 0.5, -3}
-    // );
-    // scene.addInstance(
-    //     sphere,
-    //     Material( {1, 1, 1}, false, RGB(0xb2, 0xf0, 0x89) ), 
-    //     {-1, 0.5, 3}
-    // );
-    // scene.addInstance(
-    //     sphere,
-    //     { {1, 1, 1}, true }, 
-    //     {2, 1, -2}
-    // );
-    // scene.addInstance(
-    //     plane, 
-    //     { {1, 1, 1}, false },
-    //     {0, 0, 0}
-    // );
-    scene.addInstance(
-        model,
-        { {1, 1, 1}, false, RGB(10, 10, 10) }, 
-        {0, 0, 0}, 
-        {3, 3, 3}
-    );
 
+    Random rng(388);
+    for (int i = 0; i < 5000; i ++) {
+        glm::vec3 random_pos {
+            rng.gen() * 100 - 50,
+            rng.gen() * 2,
+            rng.gen() * 100 - 50,
+        };
+        float u = rng.gen();
+        if (u < 0.9) {
+            scene.addInstance(
+                model,
+                { RGB(202, 159, 117), rng.gen() > 0.5 },
+                random_pos,
+                { 1, 1, 1 },
+                { rng.gen() * 360, rng.gen() * 360, rng.gen() * 360 }
+            );
+        } else if (u < 0.95) {
+            scene.addInstance(
+                sphere,
+                { { rng.gen(), rng.gen(), rng.gen() }, true },
+                random_pos,
+                { 0.4, 0.4, 0.4 }
+            );
+        } else {
+            random_pos.y += 6;
+            scene.addInstance(
+                sphere,
+                { { 1, 1, 1 }, false, { rng.gen() * 4, rng.gen() * 4, rng.gen() * 4 } },
+                random_pos
+            );
+        }
+    }
+    scene.addInstance(plane, { RGB(120, 204, 157) }, { 0, -0.5, 0 });
+    
+    // scene.addInstance(
+    //     model,
+    //     { RGB(202, 159, 117) },
+    //     { 0, 0, 0 },
+    //     { 1, 3, 2 }
+    // );
     // scene.addInstance(
     //     sphere,
-    //     { {1, 1, 1}, false, RGB(0xff, 0xff, 0xff) },
-    //     {3, 0, 0}
+    //     { { 1, 1, 1 }, false, RGB(255, 128, 128) },
+    //     { 0, 0, 2.5 }
     // );
     // scene.addInstance(
-    //     plane,
-    //     { {0, 1, 1}, false },
-    //     {0, 0, 2 },
-    //     { 1, 1, 1 },
-    //     { -90, 0, 0 }
+    //     sphere,
+    //     { { 1, 1, 1 }, false, RGB(128, 128, 255) },
+    //     { 0, 0, -2.5 }
     // );
     // scene.addInstance(
-    //     plane,
-    //     { {1, 0, 1}, false },
-    //     {0, 0, -2 },
-    //     { 1, 1, 1 },
-    //     { 90, 0, 0 }
+    //     sphere,
+    //     { { 1, 1, 1 }, true },
+    //     { 3, 0.5, -2 }
     // );
+    // scene.addInstance(plane, { RGB(120, 204, 157) }, { 0, -0.5, 0 });
+    
+    scene.build();
 
     SimpleRTRenderer simple_raytracing(camera, scene);
     NormalRenderer normal_renderer(camera, scene);
+    PathTracingRenderer pt_renderer(camera, scene);
     
     // normal_renderer.render(1, "normal.ppm");
 
     
     // simple_raytracing.render(128, "RT.ppm");
+    pt_renderer.render(128, "PT.ppm");
     
-    BVHDepthRenderer bvh_depth_renderer(camera, scene);
-    TriangleTestCountRenderer tri_test_renderer(camera, scene);
-    BoundTestCountRenderer bnd_test_renderer(camera, scene);
+    // TriangleTestCountRenderer tri_test_renderer(camera, scene);
+    // BoundTestCountRenderer bnd_test_renderer(camera, scene);
     
-    bvh_depth_renderer.render(4, "bvh_depth.ppm");
-    tri_test_renderer.render(4, "tri_test.ppm");
-    bnd_test_renderer.render(4, "bnd_test.ppm");
+    // tri_test_renderer.render(1, "debug_tri_test.ppm");
+    // bnd_test_renderer.render(1, "debug_bnd_test.ppm");
     
-    
-    // for(int i=0; i<120; i++){
-    //     float pos = -5.f + (4.f * i / 120.f);
-    //     camera = {film, {pos, 0, 0}, {0, 0, 0}, 40};
-    //     NormalRenderer normal_renderer(camera, scene);
+    // int total = 480;
+    // for(int i=0; i<total; i++){
+    //     float theta = 6.28 * i / total;
+    //     camera = {film, { -30.f * glm::cos(theta), 12, -30.f * glm::sin(theta)}, {0, 0, 0}, 40};
+    //     BoundTestCountRenderer bnd_test_renderer(camera, scene);
+    //     // NormalRenderer normal_renderer(camera, scene);
 
     //     char buffer[256];
-    //     snprintf(buffer, sizeof(buffer), "result/result_%02d.ppm", i);
-    //     normal_renderer.render(1, buffer);
+    //     snprintf(buffer, sizeof(buffer), "result/result_%03d.ppm", i);
+    //     bnd_test_renderer.render(1, buffer);
     // }
 
     return 0;
@@ -216,3 +232,10 @@ int main(){
 
 // Using pre-calculate prefix and postfix
 // Profile Loading model model_and_uv/dragon_871k.obj cost 2215 ms
+// ################### BVH Optimize ##################
+
+// Rendering 50 instance in scene
+// Profile Rendering image RT.ppm with 128 spp cost 30183 ms
+
+// With scene BVH
+// Profile Rendering image RT.ppm with 128 spp cost 14507 ms

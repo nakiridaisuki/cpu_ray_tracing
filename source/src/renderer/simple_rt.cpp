@@ -1,6 +1,7 @@
 #include "renderer/simple_rt.hpp"
 #include "utils/frame.hpp"
 #include "utils/random.hpp"
+#include "sample/spherical.hpp"
 
 glm::vec3 SimpleRTRenderer::renderPixel(const glm::ivec2 &pixel_coord) {
     auto ray = camera.generateRay(pixel_coord, { uniform.gen(), uniform.gen() });
@@ -19,7 +20,7 @@ glm::vec3 SimpleRTRenderer::renderPixel(const glm::ivec2 &pixel_coord) {
 
     // Using for or while?
     // I use for to prevent infinity loop
-    for(int i=0; i<50; i++){
+    for(int i=0; i<32; i++){
         auto hit_info = scene.intersect(ray);
         if(hit_info.has_value()){
             color += beta * hit_info->material->emissive;
@@ -34,11 +35,7 @@ glm::vec3 SimpleRTRenderer::renderPixel(const glm::ivec2 &pixel_coord) {
                 light_direction = frame.worldFromLocal(view_direction);
             }
             else{
-                do {
-                    light_direction = { uniform.gen(-1, 1), uniform.gen(-1, 1), uniform.gen(-1, 1) };
-                } while (glm::length(light_direction) > 1);
-                light_direction.y = glm::abs(light_direction.y);
-                light_direction = glm::normalize(light_direction);
+                light_direction = UniformSampleHemisphere(uniform);
                 light_direction = frame.worldFromLocal(light_direction);
             }
 

@@ -24,4 +24,11 @@ struct Triangle : public Shape{
     Triangle() {}
 
     std::optional<HitInfo> intersect(const Ray &ray, float t_min, float t_max) const override;
+    Bound getBound() const override {
+        Bound bnd = {};
+        bnd.extend(p1);
+        bnd.extend(p2);
+        bnd.extend(p3);
+        return bnd;
+    }
 };

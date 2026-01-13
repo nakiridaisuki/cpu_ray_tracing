@@ -10,4 +10,8 @@ struct Sphere : public Shape {
     float radius;
 
     void set_center(const glm::vec3 ns) { center = ns; }
+
+    Bound getBound() const {
+        return { center - radius, center + radius };
+    }
 };
