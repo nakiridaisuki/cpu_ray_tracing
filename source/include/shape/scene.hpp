@@ -1,7 +1,7 @@
 #pragma once
 
 #include "shape/shape.hpp"
-#include "shape/material.hpp"
+#include "material/base.hpp"
 #include "accelerate/bounds.hpp"
 #include "accelerate/scene_bvh.hpp"
 
@@ -15,7 +15,7 @@ public:
 
     void addInstance(
         Shape &shape, 
-        const Material &material,
+        const BaseMaterial *material = nullptr,
         const glm::vec3 &location = {0, 0, 0}, 
         const glm::vec3 &scale = {1, 1, 1}, 
         const glm::vec3 &rotate = {0, 0, 0}

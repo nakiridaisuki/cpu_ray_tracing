@@ -10,11 +10,10 @@
 #include "utils/timer.hpp"
 #include "utils/rgb.hpp"
 #include "renderer/normal.hpp"
-#include "renderer/simple_rt.hpp"
 #include "renderer/debug.hpp"
 #include "renderer/pathtracing.hpp"
-
-#include "thread/thread_pool.hpp"
+#include "material/diffuse.hpp"
+#include "material/specular.hpp"
 
 int main(){
 
@@ -44,30 +43,41 @@ int main(){
         };
         float u = rng.gen();
         if (u < 0.9) {
+            BaseMaterial *material;
+            if(rng.gen() > 0.5){
+                material = new DiffuseMaterial( RGB(202, 159, 117) );
+            }
+            else{
+                material = new SpecularMaterial( RGB(202, 159, 117) );
+            }
+
             scene.addInstance(
                 model,
-                { RGB(202, 159, 117), rng.gen() > 0.5 },
+                material,
                 random_pos,
                 { 1, 1, 1 },
                 { rng.gen() * 360, rng.gen() * 360, rng.gen() * 360 }
             );
         } else if (u < 0.95) {
+            auto *material = new SpecularMaterial({ rng.gen(), rng.gen(), rng.gen() });
             scene.addInstance(
                 sphere,
-                { { rng.gen(), rng.gen(), rng.gen() }, true },
+                material,
                 random_pos,
                 { 0.4, 0.4, 0.4 }
             );
         } else {
+            auto *material = new DiffuseMaterial({ 1, 1, 1 });
+            material->setEmissive({ rng.gen() * 4, rng.gen() * 4, rng.gen() * 4 });
             random_pos.y += 6;
             scene.addInstance(
                 sphere,
-                { { 1, 1, 1 }, false, { rng.gen() * 4, rng.gen() * 4, rng.gen() * 4 } },
+                material,
                 random_pos
             );
         }
     }
-    scene.addInstance(plane, { RGB(120, 204, 157) }, { 0, -0.5, 0 });
+    scene.addInstance(plane, new DiffuseMaterial(RGB(120, 204, 157)), { 0, -0.5, 0 });
     
     // scene.addInstance(
     //     model,
@@ -94,7 +104,6 @@ int main(){
     
     scene.build();
 
-    SimpleRTRenderer simple_raytracing(camera, scene);
     NormalRenderer normal_renderer(camera, scene);
     PathTracingRenderer pt_renderer(camera, scene);
     

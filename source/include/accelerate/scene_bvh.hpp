@@ -6,8 +6,8 @@
 #include "camera/ray.hpp"
 
 struct ShapeInstance {
-    Shape *shape;
-    Material material;
+    const Shape *shape;
+    const BaseMaterial *material;
     glm::mat4 world_from_object;
     glm::mat4 object_from_world;
 

@@ -248,7 +248,7 @@ std::optional<HitInfo> SceneBVH::intersect(const Ray &ray, float t_min, float t_
         closest_hit_info->normal = glm::normalize(glm::vec3(
             glm::transpose(closest_instance->object_from_world) * glm::vec4(closest_hit_info->normal, 0)
         ));
-        closest_hit_info->material = &(closest_instance->material);
+        closest_hit_info->material = closest_instance->material;
     }
 
     return closest_hit_info;

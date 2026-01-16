@@ -1,5 +1,5 @@
-#pragma once
+// #pragma once
 
-#include "renderer/base.hpp"
+// #include "renderer/base.hpp"
 
-DEFINE_RENDERER(SimpleRT);
+// DEFINE_RENDERER(SimpleRT);

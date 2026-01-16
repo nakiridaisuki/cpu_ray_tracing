@@ -1,7 +1,6 @@
 #include "renderer/pathtracing.hpp"
 #include "utils/frame.hpp"
 #include "utils/random.hpp"
-#include "sample/spherical.hpp"
 
 glm::vec3 PathTracingRenderer::renderPixel(const glm::ivec2 &pixel_coord) {
     auto ray = camera.generateRay(pixel_coord, { uniform.gen(), uniform.gen() });
@@ -18,16 +17,16 @@ glm::vec3 PathTracingRenderer::renderPixel(const glm::ivec2 &pixel_coord) {
                 break;
             }
             beta /= q;
-            beta *= hit_info->material->albedo;
 
             Frame frame(hit_info->normal);
             glm::vec3 light_direction;
-            if(hit_info->material->is_specular){
+            
+            if(hit_info->material){
                 glm::vec3 view_direction = frame.localFromWorld(-ray.direction);
-                light_direction = glm::vec3( -view_direction.x, view_direction.y, -view_direction.z);
+                light_direction = hit_info->material->sampleBRDF(view_direction, beta, uniform);
             }
             else{
-                light_direction = CosineSampleHemisphere({uniform.gen(), uniform.gen()});
+                break;
             }
             
             ray.origin = hit_info->hit_point + light_direction * std::numeric_limits<float>::epsilon();
