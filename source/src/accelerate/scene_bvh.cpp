@@ -6,17 +6,17 @@
 
 #define MAX_STACK_SIZE 64
 
-void SceneBVH::build(std::vector<ShapeInstance> &&instances) {
+void SceneBVH::build(std::vector<ShapeInstance> &instances) {
     SceneBVHTreeNode *root = treenode_allocator.allocate();
 
     for(auto &instance : instances){
         if(instance.shape->getBound().isVaild()){
             instance.updateBound();
             root->bound.extend(instance.world_bound);
-            ordered_instances.push_back(instance);
+            ordered_instances.push_back(&instance);
         }
         else{
-            infinity_instances.push_back(instance);
+            infinity_instances.push_back(&instance);
         }
     }
     root->depth = 1;
@@ -24,8 +24,10 @@ void SceneBVH::build(std::vector<ShapeInstance> &&instances) {
     SceneBVHState state = {};
     recursive_build(root, 0, ordered_instances.size(), state, ordered_instances);
 
-    flatten_nodes.reserve(state.total_node_cnt);
-    TreeNodeFlatten(root);
+    if(ordered_instances.size() > 0){
+        flatten_nodes.reserve(state.total_node_cnt);
+        TreeNodeFlatten(root);
+    }
 
     DEBUG_LINE(std::cout << "SceneBVH state: total nodes " << state.total_node_cnt << std::endl)
     DEBUG_LINE(std::cout << "SceneBVH state: leaf nodes " << state.leaf_node_cnt << std::endl)
@@ -37,7 +39,7 @@ void SceneBVH::build(std::vector<ShapeInstance> &&instances) {
 // Recursively build the SceneBVH tree
 // Using inplace partition of instances list
 // Every node control instances[start, end)
-void SceneBVH::recursive_build(SceneBVHTreeNode *node, size_t start, size_t end, SceneBVHState &state, std::vector<ShapeInstance> &instances) {
+void SceneBVH::recursive_build(SceneBVHTreeNode *node, size_t start, size_t end, SceneBVHState &state, std::vector<ShapeInstance*> &instances) {
     // Calculate node data
     state.total_node_cnt++;
     node->start = start;
@@ -81,7 +83,7 @@ void SceneBVH::recursive_build(SceneBVHTreeNode *node, size_t start, size_t end,
 
         // Calcualte bucket data
         for(size_t ins_idx = start; ins_idx < end; ins_idx++){
-            auto &ins = instances[ins_idx];
+            auto &ins = *instances[ins_idx];
             float mid = ins.center[axis];
             size_t idx = glm::clamp<size_t>((mid - node->bound.b_min[axis]) * scale[axis], 0, BUCKET_NUM - 1);
             bucket_ins_cnt[idx]++;
@@ -149,8 +151,8 @@ void SceneBVH::recursive_build(SceneBVHTreeNode *node, size_t start, size_t end,
     node->right->bound = min_right_bnd;
 
     // Inplace partition, improve huge execution time
-    size_t mid_idx =  std::partition(instances.begin() + start, instances.begin() + end, [&](auto &ins){
-        float mid = ins.center[node->split_axis];
+    size_t mid_idx =  std::partition(instances.begin() + start, instances.begin() + end, [&](auto ins){
+        float mid = ins->center[node->split_axis];
         size_t idx = glm::clamp<size_t>((mid - node->bound.b_min[node->split_axis]) * scale[node->split_axis], 0, BUCKET_NUM - 1);
         return idx < split_bucket_idx;
     }) - instances.begin();
@@ -171,13 +173,18 @@ std::optional<HitInfo> SceneBVH::intersect(const Ray &ray, float t_min, float t_
     // Manual handling the stack
     std::array<int, MAX_STACK_SIZE> stack;
     auto ptr = stack.begin();
-    size_t current_node_idx = 0;
+    size_t current_node_idx = ordered_instances.size() ? 0 : -1;
 
     DEBUG_LINE(size_t bound_test_cnt = 0)
 
     glm::vec3 inv_direc = 1.f / ray.direction;
     while(true){
         DEBUG_LINE(bound_test_cnt++)
+
+        // 0. Check 0 instance condition
+        if(current_node_idx == -1){
+            break;
+        }
 
         auto &node = flatten_nodes[current_node_idx];
         // 1. Check if intersect with this node
@@ -207,7 +214,7 @@ std::optional<HitInfo> SceneBVH::intersect(const Ray &ray, float t_min, float t_
         }
         
         for(int i=0; i<node.instance_cnt; i++){
-            auto &instance = ordered_instances[node.instance_idx + i];
+            auto &instance = *ordered_instances[node.instance_idx + i];
             auto ray_object = ray.objectFromWorld(instance.object_from_world);
             auto hit_info = instance.shape->intersect(ray_object, t_min, t_max);
 
@@ -217,7 +224,7 @@ std::optional<HitInfo> SceneBVH::intersect(const Ray &ray, float t_min, float t_
             if(hit_info.has_value()){
                 t_max = hit_info->t;
                 closest_hit_info = hit_info;
-                closest_instance = &ordered_instances[node.instance_idx + i];
+                closest_instance = ordered_instances[node.instance_idx + i];
             }
         }        
         
@@ -225,9 +232,9 @@ std::optional<HitInfo> SceneBVH::intersect(const Ray &ray, float t_min, float t_
         current_node_idx = *(--ptr);
     }
 
-    for(auto &instance : infinity_instances){
-        auto ray_object = ray.objectFromWorld(instance.object_from_world);
-        auto hit_info = instance.shape->intersect(ray_object, t_min, t_max);
+    for(auto instance : infinity_instances){
+        auto ray_object = ray.objectFromWorld(instance->object_from_world);
+        auto hit_info = instance->shape->intersect(ray_object, t_min, t_max);
 
         ray.triangle_test_count += ray_object.triangle_test_count;
         ray.bound_test_count += ray_object.bound_test_count;
@@ -235,7 +242,7 @@ std::optional<HitInfo> SceneBVH::intersect(const Ray &ray, float t_min, float t_
         if(hit_info.has_value()){
             t_max = hit_info->t;
             closest_hit_info = hit_info;
-            closest_instance = &instance;
+            closest_instance = instance;
         }
     }
 

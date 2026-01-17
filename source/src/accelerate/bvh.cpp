@@ -155,7 +155,7 @@ std::optional<HitInfo> BVH::intersect(const Ray &ray, float t_min, float t_max) 
     // Manual handling the stack
     std::array<int, MAX_STACK_SIZE> stack;
     auto ptr = stack.begin();
-    size_t current_node_idx = 0;
+    size_t current_node_idx = ordered_triangles.size() ? 0 : -1;
 
     DEBUG_LINE(size_t bound_test_cnt = 0)
     DEBUG_LINE(size_t triangle_test_cnt = 0)
@@ -163,6 +163,11 @@ std::optional<HitInfo> BVH::intersect(const Ray &ray, float t_min, float t_max) 
     glm::vec3 inv_direc = 1.f / ray.direction;
     while(true){
         DEBUG_LINE(bound_test_cnt++)
+
+        // 0. Check 0 triangle condition
+        if(current_node_idx == -1){
+            break;
+        }
 
         auto &node = flatten_nodes[current_node_idx];
         // 1. Check if intersect with this node

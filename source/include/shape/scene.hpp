@@ -21,7 +21,7 @@ public:
         const glm::vec3 &rotate = {0, 0, 0}
     );
 
-    void build() { scene_bvh.build(std::move(instances)); }
+    void build() { scene_bvh.build(instances); }
 private:
     std::vector<ShapeInstance> instances;
     SceneBVH scene_bvh;

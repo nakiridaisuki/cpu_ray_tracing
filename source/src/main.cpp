@@ -39,18 +39,18 @@ int main(){
     Scene scene {};
 
     Random rng(388);
-    for(int i=-3; i<=3; i++){
-        float ior = (i+3) / 6.f * 1.5f + 1.f;
-        scene.addInstance(
-            sphere,
-            new DielectricMaterial(
-                ior,
-                {1, 1, 1}
-            ),
-            {i*2, 0.5, 0},
-            glm::vec3(0.8)
-        );
-    }
+    // for(int i=-3; i<=3; i++){
+    //     float ior = (i+3) / 6.f * 1.5f + 1.f;
+    //     scene.addInstance(
+    //         sphere,
+    //         new DielectricMaterial(
+    //             ior,
+    //             {1, 1, 1}
+    //         ),
+    //         {i*2, 0.5, 0},
+    //         glm::vec3(0.8)
+    //     );
+    // }
     scene.addInstance(plane, new GroundMaterial(RGB(120, 204, 157)), { 0, -1, 0 });
     
     auto *light_material = new DiffuseMaterial({1, 1, 1});

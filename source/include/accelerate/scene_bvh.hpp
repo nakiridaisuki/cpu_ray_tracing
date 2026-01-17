@@ -83,14 +83,14 @@ private:
 
 class SceneBVH : Shape {
 public:
-    void build(std::vector<ShapeInstance> &&instances);
+    void build(std::vector<ShapeInstance> &instances);
     std::optional<HitInfo> intersect(const Ray &ray, float t_min, float t_max) const override;
     Bound getBound() const { return flatten_nodes[0].bound; }
 private:
-    void recursive_build(SceneBVHTreeNode *node, size_t start, size_t end, SceneBVHState &state, std::vector<ShapeInstance> &instances);
+    void recursive_build(SceneBVHTreeNode *node, size_t start, size_t end, SceneBVHState &state, std::vector<ShapeInstance*> &instances);
     void TreeNodeFlatten(SceneBVHTreeNode *node);
     SceneBVHTreeNodeAllocator treenode_allocator;
     std::vector<SceneBVHNode> flatten_nodes;
-    std::vector<ShapeInstance> ordered_instances;
-    std::vector<ShapeInstance> infinity_instances;
+    std::vector<ShapeInstance*> ordered_instances;
+    std::vector<ShapeInstance*> infinity_instances;
 };
