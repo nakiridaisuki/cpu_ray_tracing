@@ -2,7 +2,7 @@
 
 Frame::Frame(glm::vec3 &normal) {
     y_axis = normal;
-    x_axis = normal.y < 0.9 ? glm::cross(normal, {0, 1, 0}) : glm::cross(normal, {1, 0, 0});
+    x_axis = glm::normalize(glm::abs(normal.y) < 0.9 ? glm::cross(normal, {0, 1, 0}) : glm::cross(normal, {1, 0, 0}));
     z_axis = glm::cross(x_axis, y_axis);
 }
 

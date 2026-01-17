@@ -22,7 +22,7 @@ void SceneBVH::build(std::vector<ShapeInstance> &&instances) {
     root->depth = 1;
 
     SceneBVHState state = {};
-    recursive_build(root, 0, instances.size(), state, ordered_instances);
+    recursive_build(root, 0, ordered_instances.size(), state, ordered_instances);
 
     flatten_nodes.reserve(state.total_node_cnt);
     TreeNodeFlatten(root);
@@ -44,7 +44,7 @@ void SceneBVH::recursive_build(SceneBVHTreeNode *node, size_t start, size_t end,
     node->instance_cnt = end - start;
 
     // Split instances into binary tree
-    if(end - start == 1 || node->depth >= MAX_STACK_SIZE){
+    if(end - start <= 1 || node->depth >= MAX_STACK_SIZE){
         state.addLeaf(node, end - start);
         return;
     }
@@ -239,9 +239,7 @@ std::optional<HitInfo> SceneBVH::intersect(const Ray &ray, float t_min, float t_
         }
     }
 
-    #ifdef WITH_DEBUG_INFO
-    ray.bound_test_count += bound_test_cnt;
-    #endif
+    DEBUG_LINE(ray.bound_test_count += bound_test_cnt)
 
     if(closest_hit_info.has_value()){
         closest_hit_info->hit_point = closest_instance->world_from_object * glm::vec4(closest_hit_info->hit_point, 1);

@@ -14,6 +14,10 @@
 #include "renderer/pathtracing.hpp"
 #include "material/diffuse.hpp"
 #include "material/specular.hpp"
+#include "material/dielectric.hpp"
+#include "material/ground.hpp"
+
+#include "utils/frame.hpp"
 
 int main(){
 
@@ -24,100 +28,49 @@ int main(){
     int factor = 2;
     Film film(width/factor, height/factor);
 
-    Camera camera { film, { -12, 5, -12 }, { 0, 0, 0 }, 45 };
-    // Camera camera { film, { -3.6, 0, 0 }, { 0, 0, 0 }, 45 };
+    float x_pos = 0;
+    // Camera camera { film, { x_pos, 15, 0.1 }, { x_pos, 0, 0 }, 40 };
+    Camera camera { film, { x_pos, 2, 15 }, { x_pos, 0, 0 }, 40 };
     
     Sphere sphere { {0, 0, 0}, 1 };
     Model model("model_and_uv/dragon_871k.obj");
-    // Model model("model_and_uv/simple_dragon.obj");
     Plane plane( {0, 0, 0}, {0, 1, 0} );
     
     Scene scene {};
 
     Random rng(388);
-    for (int i = 0; i < 5000; i ++) {
-        glm::vec3 random_pos {
-            rng.gen() * 100 - 50,
-            rng.gen() * 2,
-            rng.gen() * 100 - 50,
-        };
-        float u = rng.gen();
-        if (u < 0.9) {
-            BaseMaterial *material;
-            if(rng.gen() > 0.5){
-                material = new DiffuseMaterial( RGB(202, 159, 117) );
-            }
-            else{
-                material = new SpecularMaterial( RGB(202, 159, 117) );
-            }
-
-            scene.addInstance(
-                model,
-                material,
-                random_pos,
-                { 1, 1, 1 },
-                { rng.gen() * 360, rng.gen() * 360, rng.gen() * 360 }
-            );
-        } else if (u < 0.95) {
-            auto *material = new SpecularMaterial({ rng.gen(), rng.gen(), rng.gen() });
-            scene.addInstance(
-                sphere,
-                material,
-                random_pos,
-                { 0.4, 0.4, 0.4 }
-            );
-        } else {
-            auto *material = new DiffuseMaterial({ 1, 1, 1 });
-            material->setEmissive({ rng.gen() * 4, rng.gen() * 4, rng.gen() * 4 });
-            random_pos.y += 6;
-            scene.addInstance(
-                sphere,
-                material,
-                random_pos
-            );
-        }
+    for(int i=-3; i<=3; i++){
+        float ior = (i+3) / 6.f * 1.5f + 1.f;
+        scene.addInstance(
+            sphere,
+            new DielectricMaterial(
+                ior,
+                {1, 1, 1}
+            ),
+            {i*2, 0.5, 0},
+            glm::vec3(0.8)
+        );
     }
-    scene.addInstance(plane, new DiffuseMaterial(RGB(120, 204, 157)), { 0, -0.5, 0 });
+    scene.addInstance(plane, new GroundMaterial(RGB(120, 204, 157)), { 0, -1, 0 });
     
-    // scene.addInstance(
-    //     model,
-    //     { RGB(202, 159, 117) },
-    //     { 0, 0, 0 },
-    //     { 1, 3, 2 }
-    // );
-    // scene.addInstance(
-    //     sphere,
-    //     { { 1, 1, 1 }, false, RGB(255, 128, 128) },
-    //     { 0, 0, 2.5 }
-    // );
-    // scene.addInstance(
-    //     sphere,
-    //     { { 1, 1, 1 }, false, RGB(128, 128, 255) },
-    //     { 0, 0, -2.5 }
-    // );
-    // scene.addInstance(
-    //     sphere,
-    //     { { 1, 1, 1 }, true },
-    //     { 3, 0.5, -2 }
-    // );
-    // scene.addInstance(plane, { RGB(120, 204, 157) }, { 0, -0.5, 0 });
+    auto *light_material = new DiffuseMaterial({1, 1, 1});
+    light_material->setEmissive({0.95, 0.95, 1});
+    scene.addInstance(plane, light_material, {0, 20, 0});
     
     scene.build();
 
-    NormalRenderer normal_renderer(camera, scene);
     PathTracingRenderer pt_renderer(camera, scene);
-    
-    // normal_renderer.render(1, "normal.ppm");
-
-    
-    // simple_raytracing.render(128, "RT.ppm");
     pt_renderer.render(128, "PT.ppm");
     
-    // TriangleTestCountRenderer tri_test_renderer(camera, scene);
-    // BoundTestCountRenderer bnd_test_renderer(camera, scene);
+    NormalRenderer normal_renderer(camera, scene);
+    normal_renderer.render(1, "normal.ppm");
+
     
-    // tri_test_renderer.render(1, "debug_tri_test.ppm");
-    // bnd_test_renderer.render(1, "debug_bnd_test.ppm");
+    TriangleTestCountRenderer tri_test_renderer(camera, scene);
+    tri_test_renderer.render(1, "debug_tri_test.ppm");
+    
+    BoundTestCountRenderer bnd_test_renderer(camera, scene);
+    bnd_test_renderer.render(1, "debug_bnd_test.ppm");
     
     // int total = 480;
     // for(int i=0; i<total; i++){

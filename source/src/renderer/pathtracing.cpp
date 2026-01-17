@@ -23,14 +23,14 @@ glm::vec3 PathTracingRenderer::renderPixel(const glm::ivec2 &pixel_coord) {
             
             if(hit_info->material){
                 glm::vec3 view_direction = frame.localFromWorld(-ray.direction);
-                light_direction = hit_info->material->sampleBRDF(view_direction, beta, uniform);
+                light_direction = hit_info->material->sampleBSDF(hit_info->hit_point, view_direction, beta, uniform);
             }
             else{
                 break;
             }
             
-            ray.origin = hit_info->hit_point + light_direction * std::numeric_limits<float>::epsilon();
             ray.direction = frame.worldFromLocal(light_direction);
+            ray.origin = hit_info->hit_point + ray.direction * std::numeric_limits<float>::epsilon();
         }
         else{
             break;

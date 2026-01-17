@@ -13,7 +13,7 @@ public:
     Model(const std::filesystem::path &filename);
 
     std::optional<HitInfo> intersect(const Ray &ray, float t_min, float t_max) const override;
-    Bound getBound() const { return bvh.getBound(); }
+    Bound getBound() const override { return bvh.getBound(); }
 private:
     BVH bvh;
 };

@@ -9,7 +9,9 @@ Camera::Camera(Film &film, const glm::vec3 &pos, const glm::vec3 &viewpoint, flo
         static_cast<float>(film.getWidth()) / static_cast<float>(film.getHeight()),
         1.f, 2.f
     ));
-    world_from_camera = glm::inverse(glm::lookAt(pos, viewpoint, {0, 1, 0}));
+
+    auto up = glm::abs(glm::normalize(viewpoint - pos).y) < 0.999 ? glm::vec3{0, 1, 0} : glm::vec3{0, 0, 1};
+    world_from_camera = glm::inverse(glm::lookAt(pos, viewpoint, up));
 }
 
 Ray Camera::generateRay(const glm::ivec2 &pixel_corod, const glm::vec2 &offset) const {

@@ -18,7 +18,7 @@ glm::vec3 BoundTestCountRenderer::renderPixel(const glm::ivec2 &pixel_coord) {
     auto ray = camera.generateRay(pixel_coord);
     auto hit_info = scene.intersect(ray);
 
-    return RGB::GenerateHeatmapRGB(static_cast<float>(ray.bound_test_count) / 200.f);
+    return RGB::GenerateHeatmapRGB(static_cast<float>(ray.bound_test_count) / 10.f);
     return {};
     #else
     retrurn {};
