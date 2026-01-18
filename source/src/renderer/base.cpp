@@ -21,7 +21,7 @@ void BaseRenderer::render(size_t spp, const std::filesystem::path &filename) {
         // Render `increase` sample point every time for dinamic update picture
         thread_pool.ParallelFor(film.getWidth(), film.getHeight(), [&](size_t x, size_t y){
             for(int i=0; i<increase; i++){
-                film.addSample(x, y, renderPixel({x, y}));
+                film.addSample(x, y, renderPixel({x, y, current_spp + i}));
             }
             progress.update(increase);
         });

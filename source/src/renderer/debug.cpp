@@ -1,7 +1,7 @@
 #include "renderer/debug.hpp"
 #include "utils/rgb.hpp"
 
-glm::vec3 TriangleTestCountRenderer::renderPixel(const glm::ivec2 &pixel_coord) {
+glm::vec3 TriangleTestCountRenderer::renderPixel(const glm::ivec3 &pixel_coord) {
     #ifdef WITH_DEBUG_INFO
     auto ray = camera.generateRay(pixel_coord);
     auto hit_info = scene.intersect(ray);
@@ -13,7 +13,7 @@ glm::vec3 TriangleTestCountRenderer::renderPixel(const glm::ivec2 &pixel_coord) 
     #endif
 }
 
-glm::vec3 BoundTestCountRenderer::renderPixel(const glm::ivec2 &pixel_coord) {
+glm::vec3 BoundTestCountRenderer::renderPixel(const glm::ivec3 &pixel_coord) {
     #ifdef WITH_DEBUG_INFO
     auto ray = camera.generateRay(pixel_coord);
     auto hit_info = scene.intersect(ray);

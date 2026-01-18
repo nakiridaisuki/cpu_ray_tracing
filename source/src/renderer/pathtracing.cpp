@@ -2,7 +2,9 @@
 #include "utils/frame.hpp"
 #include "utils/random.hpp"
 
-glm::vec3 PathTracingRenderer::renderPixel(const glm::ivec2 &pixel_coord) {
+glm::vec3 PathTracingRenderer::renderPixel(const glm::ivec3 &pixel_coord) {
+    thread_local Random uniform(pixel_coord.x * 91193 + pixel_coord.y * 37199 + pixel_coord.z);
+
     auto ray = camera.generateRay(pixel_coord, { uniform.gen(), uniform.gen() });
     glm::vec3 beta = {1, 1, 1};
     glm::vec3 L = {0, 0, 0};

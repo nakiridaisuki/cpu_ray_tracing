@@ -29,10 +29,10 @@ glm::vec3 DielectricMaterial::sampleBSDF(const glm::vec3 &hit_point, const glm::
     
     float fr = Fersnel_Fr(etai_divi_etat, cos_i, cos_t);
     
-    beta *= albedo_t;
     if(rng.gen() < fr){
         beta *= albedo_r;
         return { -view_direction.x, view_direction.y, -view_direction.z };
     }
+    beta *= albedo_t * etai_divi_etat*etai_divi_etat;
     return -etai_divi_etat * view_direction + (etai_divi_etat * cos_i - cos_t) * normal;
 }
